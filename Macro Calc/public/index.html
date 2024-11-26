@@ -1,0 +1,218 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Calculator</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+    <style>
+        :root {
+            --primary-color: #007AFF;
+            --background-color: #F5F5F7;
+            --text-color: #1D1D1F;
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-color);
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px;
+            background: white;
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
+            transition: var(--transition);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #007AFF, #00C7BE);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+        
+        input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #E5E5E7;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: var(--transition);
+            background: #F9F9FB;
+            outline: none;
+        }
+        
+        input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+            background: white;
+        }
+        
+        button {
+            background: var(--primary-color);
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: var(--transition);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 122, 255, 0.2);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .result {
+            margin-top: 40px;
+            padding: 30px;
+            background: #F5F5F7;
+            border-radius: var(--border-radius);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: var(--transition);
+        }
+        
+        .result.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .result h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        
+        .result ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .result li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .result li:last-child {
+            border-bottom: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Recipe Macro Calculator</h1>
+        <form id="recipeForm">
+            <div class="form-group">
+                <input type="text" id="name" placeholder="Recipe Name" required>
+            </div>
+            <div class="form-group">
+                <input type="number" id="calories" placeholder="Total Calories" required>
+            </div>
+            <div class="form-group">
+                <input type="number" id="protein" placeholder="Total Protein (g)" required>
+            </div>
+            <div class="form-group">
+                <input type="number" id="fats" placeholder="Total Fats (g)" required>
+            </div>
+            <div class="form-group">
+                <input type="number" id="carbs" placeholder="Total Carbs (g)" required>
+            </div>
+            <div class="form-group">
+                <input type="number" id="servings" placeholder="Number of Servings" required>
+            </div>
+            <button type="submit">Calculate</button>
+        </form>
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('recipeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            
+            // Remove visible class for animation reset
+            resultDiv.classList.remove('visible');
+            
+            const formData = {
+                name: document.getElementById('name').value,
+                calories: parseFloat(document.getElementById('calories').value),
+                protein: parseFloat(document.getElementById('protein').value),
+                fats: parseFloat(document.getElementById('fats').value),
+                carbs: parseFloat(document.getElementById('carbs').value),
+                servings: parseInt(document.getElementById('servings').value)
+            };
+
+            try {
+                const response = await fetch('/api/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <h2>${data.name}</h2>
+                        <p>Per Serving (${formData.servings} servings):</p>
+                        <ul>
+                            <li>Calories: ${data.perServing.calories.toFixed(1)}</li>
+                            <li>Protein: ${data.perServing.protein.toFixed(1)}g</li>
+                            <li>Fats: ${data.perServing.fats.toFixed(1)}g</li>
+                            <li>Carbs: ${data.perServing.carbs.toFixed(1)}g</li>
+                        </ul>
+                    `;
+                    resultDiv.style.display = 'block';
+                    
+                    // Add visible class after a short delay for animation
+                    setTimeout(() => {
+                        resultDiv.classList.add('visible');
+                    }, 50);
+                } else {
+                    alert(data.error || 'Something went wrong');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to calculate recipe');
+            }
+        });
+    </script>
+</body>
+</html>
