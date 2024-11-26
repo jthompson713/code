@@ -91,6 +91,10 @@ app.use((err, req, res, next) => {
     });
 });
 
+app.listen(port, "0.0.0.0", ()=>{
+    console.log(`Server listening to port ${port}`);
+});
+
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
