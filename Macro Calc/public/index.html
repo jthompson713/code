@@ -161,14 +161,73 @@
     </div>
 
     <script>
-        document.getElementById('recipeForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3001' 
+            : 'https://jthompson713.github.io/recipe-calc/'; // Update with your actual domain
+
+        async function calculateRecipe(formData) {
+            const loadingBtn = document.querySelector('button');
+            loadingBtn.innerHTML = 'Calculating...';
+            loadingBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/api/calculate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                console.error('Calculation failed:', error);
+                document.getElementById('result').innerHTML = `
+                    <div class="error">
+                        Failed to calculate recipe. Please try again.
+                    </div>
+                `;
+            } finally {
+                loadingBtn.innerHTML = 'Calculate';
+                loadingBtn.disabled = false;
+            }
+        }
+
+        function displayResults(data) {
             const resultDiv = document.getElementById('result');
             resultDiv.style.display = 'block';
-            
-            // Remove visible class for animation reset
-            resultDiv.classList.remove('visible');
+            resultDiv.innerHTML = `
+                <h2>${data.name}</h2>
+                <p>Per Serving (${data.servings} servings):</p>
+                <ul>
+                    <li>
+                        <span>Calories</span>
+                        <span>${data.perServing.calories.toFixed(1)}</span>
+                    </li>
+                    <li>
+                        <span>Protein</span>
+                        <span>${data.perServing.protein.toFixed(1)}g</span>
+                    </li>
+                    <li>
+                        <span>Fats</span>
+                        <span>${data.perServing.fats.toFixed(1)}g</span>
+                    </li>
+                    <li>
+                        <span>Carbs</span>
+                        <span>${data.perServing.carbs.toFixed(1)}g</span>
+                    </li>
+                </ul>
+            `;
+            resultDiv.classList.add('visible');
+        }
+
+        document.getElementById('recipeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
             
             const formData = {
                 name: document.getElementById('name').value,
@@ -179,39 +238,7 @@
                 servings: parseInt(document.getElementById('servings').value)
             };
 
-            try {
-                const response = await fetch('/api/calculate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-
-                const data = await response.json();
-                
-                if (response.ok) {
-                    resultDiv.innerHTML = `
-                        <h2>${data.name}</h2>
-                        <p>Per Serving (${formData.servings} servings):</p>
-                        <ul>
-                            <li>Calories: ${data.perServing.calories.toFixed(1)}</li>
-                            <li>Protein: ${data.perServing.protein.toFixed(1)}g</li>
-                            <li>Fats: ${data.perServing.fats.toFixed(1)}g</li>
-                            <li>Carbs: ${data.perServing.carbs.toFixed(1)}g</li>
-                        </ul>
-                    `;
-                    resultDiv.style.display = 'block';
-                    
-                    // Add visible class after a short delay for animation
-                    setTimeout(() => {
-                        resultDiv.classList.add('visible');
-                    }, 50);
-                } else {
-                    alert(data.error || 'Something went wrong');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to calculate recipe');
-            }
+            await calculateRecipe(formData);
         });
     </script>
 </body>
