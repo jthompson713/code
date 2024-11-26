@@ -13,7 +13,9 @@ app.use((req, res, next) => {
 
 // CORS configuration
 app.use(cors({
-    origin: '*', // Allow all origins for testing
+    origin: process.env.NODE_ENV === 'production' 
+        ? ['https://jthompson713.github.io/recipe-calc/', 'https://www.jthompson713.github.io/recipe-calc/']
+        : '*',
     methods: ['GET', 'POST'],
     credentials: true
 }));
@@ -84,8 +86,10 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
     console.error('Server error:', err);
     res.status(500).json({ 
-        error: 'Server error',
-        details: err.message 
+        error: 'Calculation failed',
+        message: process.env.NODE_ENV === 'production' 
+            ? 'An error occurred' 
+            : err.message
     });
 });
 
