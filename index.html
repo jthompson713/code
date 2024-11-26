@@ -166,16 +166,19 @@
             ? 'http://localhost:3001' 
             : `${window.location.origin}`;
 
+        const BACKEND_URL = process.env.NODE_ENV === 'production'
+            ? 'https://recipe-calc.onrender.com' // Update with your backend URL
+            : 'http://localhost:3001';
+
         document.getElementById('recipeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const button = e.target.querySelector('button');
             const resultDiv = document.getElementById('result');
             
-            // Show loading state
-            button.disabled = true;
-            button.textContent = 'Calculating...';
-            
             try {
+                button.disabled = true;
+                button.textContent = 'Calculating...';
+
                 const formData = {
                     name: document.getElementById('name').value,
                     calories: parseFloat(document.getElementById('calories').value),
@@ -185,7 +188,7 @@
                     servings: parseInt(document.getElementById('servings').value)
                 };
 
-                const response = await fetch(`${API_URL}/api/calculate`, {
+                const response = await fetch(`${BACKEND_URL}/api/calculate`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -194,11 +197,11 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Server returned ${response.status}`);
+                    throw new Error(await response.text());
                 }
 
                 const data = await response.json();
-                
+                resultDiv.classList.add('visible');
                 resultDiv.innerHTML = `
                     <h2>${data.name}</h2>
                     <p>Per Serving (${formData.servings} servings):</p>
@@ -209,17 +212,15 @@
                         <li>Carbs: ${data.perServing.carbs.toFixed(1)}g</li>
                     </ul>
                 `;
-                resultDiv.style.display = 'block';
-
             } catch (error) {
-                console.error('Calculation error:', error);
+                console.error('Calculation failed:', error);
                 resultDiv.innerHTML = `
                     <div class="error">
-                        Error: Unable to calculate recipe. 
-                        Please check your connection and try again.
+                        Failed to calculate recipe. Server may be unavailable.
+                        Error: ${error.message}
                     </div>
                 `;
-                resultDiv.style.display = 'block';
+                resultDiv.classList.add('visible');
             } finally {
                 button.disabled = false;
                 button.textContent = 'Calculate';

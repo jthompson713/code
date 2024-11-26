@@ -13,9 +13,7 @@ app.use((req, res, next) => {
 
 // CORS configuration
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
-        ? ['https://jthompson713.github.io/recipe-calc/', 'https://www.jthompson713.github.io/recipe-calc/']
-        : '*',
+    origin: ['https://jthompson713.github.io'],
     methods: ['GET', 'POST'],
     credentials: true
 }));
