@@ -1,0 +1,37 @@
+from midiutil import MIDIFile
+import random
+
+# Create MIDI object
+MyMIDI = MIDIFile(1)
+track = 0
+time = 0
+MyMIDI.addTempo(track, time, 95)  # 95 BPM for that laid-back feel
+
+# Set channel and volume
+channel = 0
+volume = 100
+
+# G minor scale notes (common in Larry June tracks)
+base_notes = [60, 63, 65, 67, 68, 70, 72]  # C minor scale
+duration = 1  # Full beat
+
+# Create smooth melodic pattern
+time = 0
+for i in range(16):  # 8 bars
+    note = base_notes[i % len(base_notes)]
+    
+    # Add main note with longer duration for smooth feel
+    MyMIDI.addNote(track, channel, note, time, duration * 2, volume)
+    
+    # Add sliding notes occasionally
+    if random.random() > 0.6:
+        MyMIDI.addNote(track, channel, note + 2, time + duration, duration / 2, volume - 10)
+    
+    time += duration * 2
+
+# Save MIDI file
+with open("larry_june_synth.midi", "wb") as output_file:
+    MyMIDI.writeFile(output_file)
+
+# Created/Modified files during execution:
+print("larry_june_synth.midi")
